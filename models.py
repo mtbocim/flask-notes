@@ -1,8 +1,11 @@
 
 
 from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
+
 
 db = SQLAlchemy()
+bcrypt = Bcrypt()
 
 
 def connect_db(app):
@@ -19,29 +22,51 @@ class User(db.Model):
     __tablename__ = "users"
 
     username = db.Column(
-        db.Text(20),
+        db.String(20),
         primary_key=True,
         unique=True
     )
 
     password = db.Column(
-        db.Text(100),
+        db.String(100),
         nullable=False,
     )
 
     email = db.Column(
-        #Is there a way to specifically restrict here to email
-        db.Text(50),
+        # Is there a way to specifically restrict here to email
+        db.String(50),
         nullable=False,
-        unique = True,
+        unique=True,
     )
 
     first_name = db.Column(
-        db.Text(30),
+        db.String(30),
         nullable=False,
     )
 
     last_name = db.Column(
-        db.Text(30),
+        db.String(30),
         nullable=False,
     )
+
+    @classmethod
+    # Is cls magic?
+    def register(
+        cls,
+        username,
+        password,
+        email,
+        first_name,
+        last_name
+    ):
+        """Register user w/hashed password and return user."""
+
+        hashed = bcrypt.generate_password_hash(password).decode('utf8')
+        
+        return cls(
+            username=username,
+            password=hashed,
+            email=email,
+            first_name=first_name,
+            last_name=last_name
+        )

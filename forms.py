@@ -1,10 +1,11 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, FloatField, PasswordField
+from wtforms import StringField, PasswordField
 #import email_validator
 from wtforms.validators import Email, Length, InputRequired
 
 
 class CreateUserForm(FlaskForm):
+    """Form to create a new user."""
 
     username = StringField(
         "Username:",
@@ -18,6 +19,7 @@ class CreateUserForm(FlaskForm):
         "Password:",
         validators=[
             InputRequired()
+            #add min/max length
         ]
     )
 
@@ -48,6 +50,7 @@ class CreateUserForm(FlaskForm):
 
 
 class LoginForm(FlaskForm):
+    """Form to login a user."""
 
     username = StringField(
         "Username:",
@@ -63,3 +66,7 @@ class LoginForm(FlaskForm):
             InputRequired()
         ]
     )
+
+
+class CSRFProtectForm(FlaskForm):
+    """Form for CSRF protection"""

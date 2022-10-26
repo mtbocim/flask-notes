@@ -1,3 +1,5 @@
+"""Create test users"""
+
 from app import app
 from models import db, User
 
@@ -20,6 +22,6 @@ user2 = User.register(
             )
 
 db.session.add(user1)
-
 db.session.add(user2)
+
 db.session.commit()

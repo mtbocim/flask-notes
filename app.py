@@ -1,7 +1,17 @@
 """Flask app for User Authentication"""
 #from crypt import methods
-from flask import Flask, jsonify, request, render_template, redirect, flash
-from forms import CreateUserForm, LoginForm
+from flask import (
+    Flask,
+    render_template,
+    redirect,
+    flash,
+    session,
+)
+from forms import (
+    CreateUserForm,
+    LoginForm,
+    CSRFProtectForm
+)
 
 from models import db, connect_db, User
 
@@ -24,8 +34,9 @@ def redirect_register():
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
-    """ Display registration form,
-    register/create user with accepted data """
+    """ 
+        Display registration form, register/create user with accepted data.
+    """
 
     form = CreateUserForm()
 
@@ -36,7 +47,8 @@ def register():
         first_name = form.first_name.data
         last_name = form.last_name.data
 
-        existing_user = User.query.filter(User.username == username).one_or_none()
+        existing_user = User.query.filter(
+            User.username == username).one_or_none()
 
         if not existing_user:
 
@@ -51,7 +63,9 @@ def register():
             db.session.add(user)
             db.session.commit()
 
-            return redirect("/secret")
+            session["user_id"] = user.username
+
+            return redirect(f"/user/{username}")
 
         else:
             flash("Username already exists!")
@@ -62,16 +76,21 @@ def register():
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
+    """
+        Authenticates user then logs them in and redirects to secrets, 
+        or inform of incorrect login information.    
+    """
 
     form = LoginForm()
 
     if form.validate_on_submit():
         username = form.username.data
         password = form.password.data
+        user = User.authenticate(username, password)
 
-        if User.authenticate(username, password):
-
-            return redirect("/secret")
+        if user:
+            session["user_id"] = user.username
+            return redirect(f"/user/{username}")
 
         else:
             flash("Incorrect username or password.")
@@ -81,7 +100,41 @@ def login():
         return render_template('login.html', form=form)
 
 
+@app.get('/user/<username>')
+def show_secret_page(username):
+    """
+        Shhhh, it's a secret to everyone...
 
-@app.get('/secret')
-def show_secret_page():
-    return render_template('secrets.html')
+        Shows user info or redirects to login page. 
+
+    """
+    
+    #we didn't use username right now, but could throw message is
+    #username doesn't match session user_id
+    #i.e. 401
+    if "user_id" not in session:
+        form = LoginForm()
+        flash("You must be logged in!!!! >:( ")
+        return render_template('login.html', form=form)
+
+    else:
+        
+        user = User.query.get(session["user_id"])
+        form = CSRFProtectForm()
+        
+        return render_template(
+            'secrets.html',
+            user=user,
+            form=form
+        )
+
+@app.post('/logout')
+def logout_user():
+    """Logs out user"""
+
+    form = CSRFProtectForm()
+    #it just happens... shh.....
+    if form.validate_on_submit():
+        session.pop("user_id", None)
+    #todo:unauthorized
+    return redirect('/')

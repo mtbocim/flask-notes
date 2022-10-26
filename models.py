@@ -59,7 +59,7 @@ class User(db.Model):
         first_name,
         last_name
     ):
-        """Register user w/hashed password and return user."""
+        """Create user w/hashed password and return user."""
 
         hashed = bcrypt.generate_password_hash(password).decode('utf8')
 
@@ -71,7 +71,6 @@ class User(db.Model):
             last_name=last_name
         )
 
-
     @classmethod
     def authenticate(
         cls,
@@ -79,8 +78,8 @@ class User(db.Model):
         password
     ):
         """ Checks that user exists and password is correct. """
-
-        user =User.query.filter_by(username=username).one_or_none()
+        #todo: add user return to docstring
+        user = User.query.filter_by(username=username).one_or_none()
 
         if user and bcrypt.check_password_hash(user.password, password):
             return user
